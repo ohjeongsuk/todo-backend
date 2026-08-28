@@ -8,7 +8,7 @@
 		<relativePath/>
 		<!-- lookup parent from repository -->
 	</parent>
-	<groupId>com.example.todoapp</groupId>
+	<groupId>com.example</groupId>
 	<artifactId>todo-backend</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>todo-backend</name>
@@ -172,7 +172,7 @@
 
 						<!-- import 정렬: java/javax -> 서드파티 -> 프로젝트 -> static -->
 						<importOrder>
-							<order>java|javax,,com.example.todoapp,\#</order>
+							<order>java|javax,,com.example,\#</order>
 						</importOrder>
 
 						<!-- 사용하지 않는 import 를 제거한다 -->
