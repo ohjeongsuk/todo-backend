@@ -1,0 +1,20 @@
+# ==============================================================================
+# 테스트 설정 예시 파일
+#
+# 이 파일을 application-test.yml 로 복사한 뒤 실제 값을 채운다.
+#   cp application-test.yml.example application-test.yml
+# ==============================================================================
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/todolist_db_test
+    username: postgres
+    password: 여기에_로컬_DB_비밀번호를_입력한다
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        jdbc:
+          time_zone: UTC
