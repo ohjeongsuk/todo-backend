@@ -1,0 +1,15 @@
+# ==============================================================================
+# 로컬 설정 예시 파일
+#
+# 이 파일을 application-local.yml 로 복사한 뒤 실제 값을 채운다.
+#   cp application-local.yml.example application-local.yml
+#
+# 실행: ./mvnw spring-boot:run (application.yml 기본값이 local 프로파일이다)
+# ==============================================================================
+spring:
+  datasource:
+    username: postgres
+    password: 여기에_로컬_DB_비밀번호를_입력한다
+  jpa:
+    hibernate:
+      ddl-auto: update

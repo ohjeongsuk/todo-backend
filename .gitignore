@@ -39,14 +39,13 @@ build/
 !.env.example
 application-local.yml
 application-local.yaml
-application-local.properties
 application-secret.yml
-application-secret.properties
-src/main/resources/application-local.*
-src/main/resources/application-secret.*
+src/main/resources/application-local.yml
+src/main/resources/application-local.yaml
+src/main/resources/application-secret.yml
 # 예시 파일은 어떤 설정이 필요한지 알리기 위해 추적한다
-!src/main/resources/application-local.properties.example
-!application-local.properties.example
+!src/main/resources/application-local.yml.example
+!application-local.yml.example
 
 ### Spotless 캐시 ###
 .spotless-index

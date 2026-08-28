@@ -1,0 +1,34 @@
+spring:
+  application:
+    name: todo-backend
+  profiles:
+    active: local
+
+  # ==============================================================================
+  # 데이터베이스 (PostgreSQL)
+  #
+  # 비밀 정보는 코드에 하드코딩하지 않는다 (CLAUDE.md 절대 규칙 9).
+  # 실제 접속 정보는 application-local.yml 또는 환경변수로 주입한다.
+  # 로컬 실행 예시는 application-local.yml.example 을 참고한다.
+  # ==============================================================================
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:todolist_db}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+
+  # ==============================================================================
+  # JPA / Hibernate
+  # ==============================================================================
+  jpa:
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        # 시간대: 서버와 DB 모두 UTC 로 저장한다 (CLAUDE.md 공통 컨벤션)
+        jdbc:
+          time_zone: UTC
+
+logging:
+  level:
+    org.hibernate: info
+    org.hibernate.SQL: debug
