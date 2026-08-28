@@ -1,0 +1,16 @@
+# 개행 문자 정책 (프론트엔드와 동일하게 맞춘다)
+# Spotless 가 LF 로 포맷하므로 git 의 CRLF 자동 변환을 막는다.
+
+* text=auto eol=lf
+
+# Maven 래퍼: mvnw 는 sh, mvnw.cmd 는 Windows 배치
+mvnw text eol=lf
+mvnw.cmd text eol=crlf
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# 바이너리
+*.jar binary
+*.png binary
+*.jpg binary
+*.ico binary
