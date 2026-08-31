@@ -12,7 +12,7 @@ import jakarta.persistence.Table;
 /**
  * 사용자 엔티티. 로컬 계정은 {@link #createLocal}, 구글 계정은 {@link #createGoogle}로 생성한다.
  *
- * <p>동일 이메일의 로컬 계정과 구글 계정은 별개로 만들지 않고 하나로 연결한다 (CLAUDE.md 5장).
+ * <p>동일 이메일의 로컬 계정이 이미 있으면 구글 로그인을 거부한다(자동 연동하지 않음, CLAUDE.md 5장).
  */
 @Entity
 @Table(name = "users")
