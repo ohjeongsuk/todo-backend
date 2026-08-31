@@ -28,6 +28,22 @@ spring:
         jdbc:
           time_zone: UTC
 
+  # ==============================================================================
+  # Google OAuth2 (ROADMAP Phase 5)
+  #
+  # provider 블록은 두지 않는다 — "google"은 Spring Security가 내장 프리셋으로
+  # 인증/토큰/사용자정보 엔드포인트를 이미 알고 있다. client-id/secret만 채우면 된다.
+  # 리다이렉트 URI는 기본값(/login/oauth2/code/{registrationId})을 그대로 쓴다.
+  # ==============================================================================
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: ${GOOGLE_CLIENT_ID}
+            client-secret: ${GOOGLE_CLIENT_SECRET}
+            scope: email, profile
+
 logging:
   level:
     org.hibernate: info

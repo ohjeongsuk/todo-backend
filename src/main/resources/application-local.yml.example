@@ -13,6 +13,15 @@ spring:
   jpa:
     hibernate:
       ddl-auto: update
+  # Google Cloud Console에서 발급받은 로컬용 OAuth 클라이언트 값을 채운다.
+  # 리다이렉트 URI로 http://localhost:8080/login/oauth2/code/google 을 등록해야 한다.
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: 여기에_로컬용_구글_클라이언트_ID를_입력한다
+            client-secret: 여기에_로컬용_구글_클라이언트_시크릿을_입력한다
 
 # JWT 서명에 사용하는 시크릿. application.yml이 ${JWT_SECRET}로 필수 참조하므로
 # 값이 없으면 기동이 실패한다. 로컬은 아무 임의 문자열이어도 되지만 운영은 충분히

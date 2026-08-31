@@ -8,8 +8,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
@@ -21,11 +19,15 @@ import com.example.todoapp.security.JwtAccessDeniedHandler;
 import com.example.todoapp.security.JwtAuthenticationEntryPoint;
 import com.example.todoapp.security.JwtAuthenticationFilter;
 import com.example.todoapp.security.JwtTokenProvider;
+import com.example.todoapp.security.OAuth2FailureHandler;
+import com.example.todoapp.security.OAuth2SuccessHandler;
+import com.example.todoapp.service.CustomOAuth2UserService;
 
 /**
- * 인증·인가 전체 설정 (ROADMAP Phase 3). Access Token은 JWT로 매 요청마다 {@link
- * JwtAuthenticationFilter}가 검증하므로 세션을 쓰지 않는다({@code STATELESS}). CSRF는 쿠키 기반 세션
- * 인증이 아니므로 비활성화한다.
+ * 인증·인가 전체 설정 (ROADMAP Phase 3, 구글 OAuth2는 Phase 5). Access Token은 JWT로 매 요청마다
+ * {@link JwtAuthenticationFilter}가 검증하므로 세션을 쓰지 않는다({@code STATELESS}). CSRF는 쿠키 기반
+ * 세션 인증이 아니므로 비활성화한다. {@link PasswordEncoderConfig}가 {@code PasswordEncoder} 빈을
+ * 별도로 갖는 이유는 이 클래스 참고.
  */
 @Configuration
 @EnableWebSecurity
@@ -38,12 +40,17 @@ public class SecurityConfig {
         "/api/auth/login",
         "/api/auth/refresh",
         "/api/auth/password/**",
+        "/oauth2/**",
+        "/login/oauth2/**",
     };
 
     private final JwtTokenProvider jwtTokenProvider;
     private final UserRepository userRepository;
     private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
     private final JwtAccessDeniedHandler jwtAccessDeniedHandler;
+    private final CustomOAuth2UserService customOAuth2UserService;
+    private final OAuth2SuccessHandler oAuth2SuccessHandler;
+    private final OAuth2FailureHandler oAuth2FailureHandler;
     private final String corsAllowedOrigin;
 
     public SecurityConfig(
@@ -51,11 +58,17 @@ public class SecurityConfig {
             UserRepository userRepository,
             JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint,
             JwtAccessDeniedHandler jwtAccessDeniedHandler,
+            CustomOAuth2UserService customOAuth2UserService,
+            OAuth2SuccessHandler oAuth2SuccessHandler,
+            OAuth2FailureHandler oAuth2FailureHandler,
             @Value("${cors.allowed-origin}") String corsAllowedOrigin) {
         this.jwtTokenProvider = jwtTokenProvider;
         this.userRepository = userRepository;
         this.jwtAuthenticationEntryPoint = jwtAuthenticationEntryPoint;
         this.jwtAccessDeniedHandler = jwtAccessDeniedHandler;
+        this.customOAuth2UserService = customOAuth2UserService;
+        this.oAuth2SuccessHandler = oAuth2SuccessHandler;
+        this.oAuth2FailureHandler = oAuth2FailureHandler;
         this.corsAllowedOrigin = corsAllowedOrigin;
     }
 
@@ -75,6 +88,14 @@ public class SecurityConfig {
                                         .permitAll()
                                         .anyRequest()
                                         .authenticated())
+                .oauth2Login(
+                        oauth2 ->
+                                oauth2.userInfoEndpoint(
+                                                userInfo ->
+                                                        userInfo.userService(
+                                                                customOAuth2UserService))
+                                        .successHandler(oAuth2SuccessHandler)
+                                        .failureHandler(oAuth2FailureHandler))
                 .addFilterBefore(
                         new JwtAuthenticationFilter(jwtTokenProvider, userRepository),
                         UsernamePasswordAuthenticationFilter.class);
@@ -94,10 +115,5 @@ public class SecurityConfig {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;
-    }
-
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
     }
 }

@@ -71,6 +71,12 @@ public class AuthService {
         return issueTokens(user);
     }
 
+    /** 구글 OAuth2 로그인 성공 후 이미 조회·생성된 사용자로 토큰을 발급한다 (ROADMAP Phase 5). */
+    @Transactional
+    public LoginResult issueTokensForOAuth2(User user) {
+        return issueTokens(user);
+    }
+
     /** Refresh Token 회전 성공 시 새 Access/Refresh 토큰 쌍을 반환한다. */
     @Transactional
     public LoginResult refresh(String rawRefreshToken) {
