@@ -1,4 +1,4 @@
-package com.example;
+package com.example.todoapp;
 
 import java.util.TimeZone;
 

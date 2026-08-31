@@ -32,3 +32,32 @@ logging:
   level:
     org.hibernate: info
     org.hibernate.SQL: debug
+
+# ==============================================================================
+# 인증 (JWT / Refresh Token / 비밀번호 재설정 토큰)
+#
+# 시크릿은 코드에 하드코딩하지 않는다 (CLAUDE.md 절대 규칙 9). JWT_SECRET은 반드시
+# 환경변수로 주입한다 (기본값 없음 — 없으면 기동 실패해야 안전하다).
+# ==============================================================================
+jwt:
+  secret: ${JWT_SECRET}
+  access-token-expiration: 1800000 # 30분 (ms) — CLAUDE.md 5장
+
+refresh-token:
+  expiration-days: 14 # CLAUDE.md 5장
+
+password-reset-token:
+  expiration-minutes: 30 # PRD F-43
+
+cors:
+  allowed-origin: ${CORS_ALLOWED_ORIGIN:http://localhost:3000}
+
+# 비밀번호 재설정 링크·OAuth 콜백(Phase 5) 리다이렉트 대상. cors.allowed-origin과 동일 도메인이다.
+frontend:
+  url: ${FRONTEND_URL:http://localhost:3000}
+
+# 로컬(localhost:3000 ↔ localhost:8080)은 same-site이므로 Lax로 충분하다 (CLAUDE.md 5장).
+# 운영 값은 application-prod.yml에서 None; Secure로 재정의한다.
+refresh-token-cookie:
+  same-site: Lax
+  secure: false

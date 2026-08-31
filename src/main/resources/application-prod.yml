@@ -15,3 +15,12 @@ logging:
   level:
     org.hibernate: warn
     org.hibernate.SQL: warn
+
+cors:
+  allowed-origin: ${CORS_ALLOWED_ORIGIN}
+
+# 운영은 프론트(Amplify)와 백엔드(EC2)가 cross-site이므로 SameSite=None; Secure가 필요하다
+# (CLAUDE.md 5장). 로컬은 application.yml 기본값(Lax)을 그대로 쓴다.
+refresh-token-cookie:
+  same-site: None
+  secure: true

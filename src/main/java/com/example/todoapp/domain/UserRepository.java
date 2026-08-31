@@ -1,4 +1,4 @@
-package com.example.domain;
+package com.example.todoapp.domain;
 
 import java.util.Optional;
 
@@ -9,4 +9,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByEmailAndDeletedAtIsNull(String email);
 
     boolean existsByEmailAndDeletedAtIsNull(String email);
+
+    Optional<User> findByIdAndDeletedAtIsNull(Long id);
 }

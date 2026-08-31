@@ -1,4 +1,4 @@
-package com.example.domain;
+package com.example.todoapp.domain;
 
 import java.time.Clock;
 import java.time.Instant;
