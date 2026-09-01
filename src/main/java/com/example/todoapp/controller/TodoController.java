@@ -45,7 +45,7 @@ public class TodoController {
             @AuthenticationPrincipal User principal,
             @RequestParam(required = false) Boolean completed,
             @RequestParam(required = false) String keyword,
-            @PageableDefault(sort = "createdAt", direction = DESC) Pageable pageable) {
+            @PageableDefault(size = 10, sort = "createdAt", direction = DESC) Pageable pageable) {
         Page<Todo> page = todoService.list(principal.getId(), completed, keyword, pageable);
         return ApiResponse.success(PageResponse.from(page.map(TodoResponse::from)));
     }
