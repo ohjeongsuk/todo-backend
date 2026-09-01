@@ -29,6 +29,9 @@ public class TodoService {
 
     private static final Set<String> SORT_WHITELIST = Set.of("createdAt", "dueDate");
 
+    /** 페이지당 최대 건수 (PRD F-13). 서버가 강제해야 하는 값이다 (PRD NF-08). */
+    private static final int MAX_PAGE_SIZE = 50;
+
     private final TodoRepository todoRepository;
     private final UserRepository userRepository;
     private final HtmlSanitizer htmlSanitizer;
@@ -87,14 +90,25 @@ public class TodoService {
         getOwned(userId, todoId).softDelete();
     }
 
-    /** 정렬 화이트리스트 밖 프로퍼티가 들어오면 500 대신 기본 정렬(createdAt,desc)로 조용히 대체한다. */
+    /**
+     * 정렬 화이트리스트 밖 프로퍼티가 들어오면 500 대신 기본 정렬(createdAt,desc)로 조용히 대체하고,
+     * 페이지 크기를 {@link #MAX_PAGE_SIZE}로 제한한다.
+     *
+     * <p>크기 제한이 필요한 이유: 클라이언트가 {@code size=10000}을 보내면 Spring 기본 상한(2000)까지는
+     * 그대로 통과해 한 번에 대량 조회가 일어난다. 허용 범위는 서버가 강제한다 (PRD NF-08).
+     */
     private Pageable sanitizePageable(Pageable pageable) {
+        int size = Math.min(pageable.getPageSize(), MAX_PAGE_SIZE);
+
         Sort.Order order = pageable.getSort().stream().findFirst().orElse(null);
         if (order == null || !SORT_WHITELIST.contains(order.getProperty())) {
             return PageRequest.of(
-                    pageable.getPageNumber(),
-                    pageable.getPageSize(),
-                    Sort.by(Sort.Direction.DESC, "createdAt"));
+                    pageable.getPageNumber(), size, Sort.by(Sort.Direction.DESC, "createdAt"));
+        }
+
+        // 정렬은 유효하지만 크기가 상한을 넘는 경우도 재구성해야 한다.
+        if (size != pageable.getPageSize()) {
+            return PageRequest.of(pageable.getPageNumber(), size, pageable.getSort());
         }
         return pageable;
     }
