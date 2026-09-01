@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingRequestCookieException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -36,6 +37,19 @@ public class GlobalExceptionHandler {
                 .forEach(error -> fieldErrors.put(error.getField(), error.getDefaultMessage()));
         return ResponseEntity.status(ErrorCode.INVALID_INPUT.getStatus())
                 .body(ApiResponse.error(ErrorCode.INVALID_INPUT, fieldErrors));
+    }
+
+    /**
+     * 필수 쿠키가 없을 때. {@code @CookieValue}가 던진다.
+     *
+     * <p>이 핸들러가 없으면 아래 generic 핸들러로 떨어져 500이 나간다. 쿠키가 없다는 것은 서버 오류가
+     * 아니라 인증 정보가 없다는 뜻이므로 401이 맞다. 실제로 프론트의 라우트 보호 동선에서 미인증
+     * 사용자가 접근할 때마다 refresh가 1회 시도되어 이 경로를 탄다.
+     */
+    @ExceptionHandler(MissingRequestCookieException.class)
+    public ResponseEntity<ApiResponse<Void>> handleMissingCookie() {
+        return ResponseEntity.status(ErrorCode.UNAUTHORIZED.getStatus())
+                .body(ApiResponse.error(ErrorCode.UNAUTHORIZED));
     }
 
     @ExceptionHandler(Exception.class)

@@ -22,7 +22,7 @@ import com.example.todoapp.security.RefreshTokenCookieFactory;
 import com.example.todoapp.service.AuthService;
 import com.example.todoapp.service.AuthService.LoginResult;
 
-/** 회원가입·로그인·토큰 재발급·내 정보 조회 API. 로그아웃 API는 만들지 않는다(AUTH-06은 Phase 7에서 프론트 전용 처리). */
+/** 회원가입·로그인·로그아웃·토큰 재발급·내 정보 조회 API. */
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
@@ -52,6 +52,23 @@ public class AuthController {
     public ResponseEntity<ApiResponse<TokenResponse>> refresh(
             @CookieValue("refresh_token") String rawRefreshToken) {
         return tokenResponse(authService.refresh(rawRefreshToken));
+    }
+
+    /**
+     * 로그아웃. Refresh Token을 DB에서 폐기하고 쿠키를 만료시킨다 (CLAUDE.md 5장, PRD F-08·7.4).
+     *
+     * <p>쿠키를 {@code required = false}로 받는 이유: 로그아웃은 멱등이어야 한다. 쿠키가 없다는 것은
+     * 이미 로그아웃된 상태이지 오류가 아니므로 400·401을 내지 않는다. 쿠키 만료 헤더는 어느 경우든 붙인다.
+     */
+    @PostMapping("/logout")
+    public ResponseEntity<Void> logout(
+            @CookieValue(value = "refresh_token", required = false) String rawRefreshToken) {
+        if (rawRefreshToken != null && !rawRefreshToken.isBlank()) {
+            authService.logout(rawRefreshToken);
+        }
+        return ResponseEntity.noContent()
+                .header(HttpHeaders.SET_COOKIE, refreshTokenCookieFactory.expire().toString())
+                .build();
     }
 
     @GetMapping("/me")

@@ -39,6 +39,9 @@ public class SecurityConfig {
         "/api/auth/signup",
         "/api/auth/login",
         "/api/auth/refresh",
+        // Access Token이 만료된 뒤에도 서버 세션(Refresh Token)을 정리할 수 있어야 한다.
+        // 인증을 요구하면 만료된 사용자가 서버 로그아웃을 할 방법이 없어진다 (CLAUDE.md 5장).
+        "/api/auth/logout",
         "/api/auth/password/**",
         "/oauth2/**",
         "/login/oauth2/**",
