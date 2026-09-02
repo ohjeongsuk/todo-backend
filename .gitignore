@@ -4,7 +4,7 @@ target/
 !**/src/main/**/target/
 !**/src/test/**/target/
 
-### STS ###
+### STS / Eclipse ###
 .apt_generated
 .classpath
 .factorypath
@@ -12,6 +12,10 @@ target/
 .settings
 .springBeans
 .sts4-cache
+# Eclipse 기본 빌드 출력. 프로젝트 트리를 통째로 복제하며 .class 와 .env.example 사본까지 들어간다
+/bin/
+# Eclipse 워크스페이스 로컬 상태 (중첩 저장소로 잘못 커밋되는 것도 막는다)
+/.metadata/
 
 ### IntelliJ IDEA ###
 .idea
@@ -53,3 +57,9 @@ src/test/resources/application-test.yml
 
 ### Spotless 캐시 ###
 .spotless-index
+
+### Node.js (재발 방지) ###
+# 백엔드는 npm 프로젝트가 아니다. 실수로 npx 등을 실행해도 커밋되지 않도록 막는다.
+node_modules/
+/package.json
+/package-lock.json
