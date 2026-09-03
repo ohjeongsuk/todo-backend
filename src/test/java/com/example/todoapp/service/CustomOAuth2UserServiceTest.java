@@ -24,8 +24,7 @@ import static org.mockito.Mockito.when;
 /**
  * {@link CustomOAuth2UserService}의 사용자 조회·생성 로직만 검증하는 단위 테스트다 (ROADMAP Phase 5).
  * OAuth2 흐름 전체(구글 서버와의 실제 통신)는 MockMvc로 끝까지 검증할 수 없으므로, {@code
- * super.loadUser()}를 거치지 않는 {@link CustomOAuth2UserService#resolveUser}만 대상으로 한다
- * (CLAUDE.md 14장).
+ * super.loadUser()}를 거치지 않는 {@link CustomOAuth2UserService#resolveUser}만 대상으로 한다.
  */
 @ExtendWith(MockitoExtension.class)
 class CustomOAuth2UserServiceTest {
