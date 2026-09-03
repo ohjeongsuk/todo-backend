@@ -34,6 +34,10 @@ import com.example.todoapp.service.CustomOAuth2UserService;
 public class SecurityConfig {
 
     private static final String[] PERMIT_ALL_PATHS = {
+        // /swagger-ui.html은 SpringDoc이 /swagger-ui/index.html로 리다이렉트하는 진입점이라
+        // /swagger-ui/** 패턴에 포함되지 않는다. 이것만 permitAll에서 빠지면 진입점 접근이
+        // 401로 막혀 리다이렉트 자체가 실행되지 않는다.
+        "/swagger-ui.html",
         "/swagger-ui/**",
         "/v3/api-docs/**",
         "/api/auth/signup",
