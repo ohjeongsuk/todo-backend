@@ -35,14 +35,17 @@ public class TodoService {
     private final TodoRepository todoRepository;
     private final UserRepository userRepository;
     private final HtmlSanitizer htmlSanitizer;
+    private final AttachmentService attachmentService;
 
     public TodoService(
             TodoRepository todoRepository,
             UserRepository userRepository,
-            HtmlSanitizer htmlSanitizer) {
+            HtmlSanitizer htmlSanitizer,
+            AttachmentService attachmentService) {
         this.todoRepository = todoRepository;
         this.userRepository = userRepository;
         this.htmlSanitizer = htmlSanitizer;
+        this.attachmentService = attachmentService;
     }
 
     @Transactional(readOnly = true)
@@ -50,13 +53,24 @@ public class TodoService {
         return todoRepository.search(userId, completed, keyword, sanitizePageable(pageable));
     }
 
+    /**
+     * 첨부 수집은 <b>sanitize 이후</b>의 HTML을 대상으로 한다. 순서가 뒤바뀌면 Jsoup이 제거할 태그 안의
+     * 첨부까지 LINKED로 승격되어, 본문에 존재하지 않는 파일이 정리 배치에서도 빠진 채 영구 보존된다.
+     */
     @Transactional
     public Todo create(Long userId, TodoCreateRequest request) {
         User user = userRepository.getReferenceById(userId);
         String sanitized = htmlSanitizer.sanitize(request.content());
-        return todoRepository.save(
-                Todo.create(
-                        user, request.title(), sanitized, request.priority(), request.dueDate()));
+        Todo todo =
+                todoRepository.save(
+                        Todo.create(
+                                user,
+                                request.title(),
+                                sanitized,
+                                request.priority(),
+                                request.dueDate()));
+        attachmentService.syncTodoAttachments(userId, todo, sanitized);
+        return todo;
     }
 
     @Transactional(readOnly = true)
@@ -66,11 +80,13 @@ public class TodoService {
                 .orElseThrow(() -> new ApiException(ErrorCode.NOT_FOUND));
     }
 
+    /** {@link #create}와 같은 이유로 sanitize 이후의 HTML을 첨부 수집에 넘긴다. */
     @Transactional
     public Todo update(Long userId, Long todoId, TodoUpdateRequest request) {
         Todo todo = getOwned(userId, todoId);
         String sanitized = htmlSanitizer.sanitize(request.content());
         todo.updateContent(request.title(), sanitized, request.priority(), request.dueDate());
+        attachmentService.syncTodoAttachments(userId, todo, sanitized);
         return todo;
     }
 

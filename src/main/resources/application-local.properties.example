@@ -1,0 +1,38 @@
+# ==============================================================================
+# 로컬 설정 예시 파일
+#
+# 이 파일을 application-local.properties 로 복사한 뒤 실제 값을 채운다.
+#   cp application-local.properties.example application-local.properties
+#
+# 실행: ./mvnw spring-boot:run (application.properties 기본값이 local 프로파일이다)
+#
+# 주의: .properties 는 ISO-8859-1 로 읽힌다. 아래 플레이스홀더가 전부 영문인 이유이며,
+#       실제 값을 채울 때도 ASCII 만 쓴다. 한글은 주석에만 둔다.
+# ==============================================================================
+spring.datasource.username=postgres
+# 로컬 PostgreSQL 의 postgres 계정 비밀번호로 바꾼다
+spring.datasource.password=CHANGE_ME_LOCAL_DB_PASSWORD
+spring.jpa.hibernate.ddl-auto=update
+
+# Google Cloud Console에서 발급받은 로컬용 OAuth 클라이언트 값을 채운다.
+# 리다이렉트 URI로 http://localhost:8080/login/oauth2/code/google 을 등록해야 한다.
+spring.security.oauth2.client.registration.google.client-id=CHANGE_ME_GOOGLE_CLIENT_ID
+spring.security.oauth2.client.registration.google.client-secret=CHANGE_ME_GOOGLE_CLIENT_SECRET
+
+# JWT 서명에 사용하는 시크릿. application.properties가 ${JWT_SECRET}로 필수 참조하므로
+# 값이 없으면 기동이 실패한다. 로컬은 아무 임의 문자열이어도 되지만 운영은 충분히
+# 무작위한 값을 환경변수로 주입한다 (CLAUDE.md 절대 규칙 9).
+# HS256 서명 키라서 32바이트(32자) 이상이어야 한다.
+jwt.secret=CHANGE_ME_LOCAL_JWT_SECRET_AT_LEAST_32_BYTES
+
+# ==============================================================================
+# 첨부 스토리지 (로컬 디스크)
+#
+# signing-secret 은 jwt.secret 과 반드시 다른 값을 쓴다 (PRD NF-32).
+# HS256 서명 키라서 32바이트(32자) 이상이어야 한다.
+# ==============================================================================
+app.storage.type=local
+app.storage.local.base-dir=${LOCAL_UPLOAD_DIR:../upload}
+app.storage.local.base-url=http://localhost:8080
+app.storage.url-expiry-minutes=30
+app.storage.signing-secret=CHANGE_ME_STORAGE_SIGNING_SECRET_AT_LEAST_32_BYTES

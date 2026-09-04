@@ -49,6 +49,13 @@ public class SecurityConfig {
         "/api/auth/password/**",
         "/oauth2/**",
         "/login/oauth2/**",
+        // 첨부 업로드·조회는 JWT가 아니라 쿼리 서명 토큰으로 인가한다 (PRD NF-32).
+        // 브라우저 <img> 태그는 Authorization 헤더를 실을 수 없고, S3 presigned PUT은
+        // 그 헤더가 붙으면 서명 검증에 실패한다. 두 스토리지의 인증 형태를 같게 만들어야
+        // 프론트엔드가 로컬/S3를 구분하지 않는다 (PRD F-50).
+        // 인증이 사라진 게 아니라 AttachmentService가 StorageSignature로 직접 검증한다.
+        "/api/attachments/*/upload",
+        "/api/attachments/*/raw",
     };
 
     private final JwtTokenProvider jwtTokenProvider;

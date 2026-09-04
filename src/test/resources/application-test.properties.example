@@ -1,0 +1,32 @@
+# ==============================================================================
+# 테스트 설정 예시 파일
+#
+# 이 파일을 application-test.properties 로 복사한 뒤 실제 값을 채운다.
+#   cp application-test.properties.example application-test.properties
+#
+# 주의: .properties 는 ISO-8859-1 로 읽힌다. 아래 플레이스홀더가 전부 영문인 이유이며,
+#       실제 값을 채울 때도 ASCII 만 쓴다. 한글은 주석에만 둔다.
+# ==============================================================================
+spring.datasource.url=jdbc:postgresql://localhost:5432/todolist_db_test
+spring.datasource.username=postgres
+# 로컬 PostgreSQL 의 postgres 계정 비밀번호로 바꾼다
+spring.datasource.password=CHANGE_ME_LOCAL_DB_PASSWORD
+spring.jpa.hibernate.ddl-auto=create-drop
+spring.jpa.show-sql=true
+spring.jpa.properties.hibernate.format_sql=true
+spring.jpa.properties.hibernate.jdbc.time_zone=UTC
+
+# HS256 서명 키라서 32바이트(32자) 이상이어야 한다.
+jwt.secret=CHANGE_ME_TEST_JWT_SECRET_AT_LEAST_32_BYTES
+
+# ==============================================================================
+# 첨부 스토리지 (테스트 전용)
+#
+# app.storage.type 이 없으면 StorageService 빈이 등록되지 않아 주입이 실패한다.
+# base-dir 은 저장소 밖 임시 경로를 쓴다.
+# ==============================================================================
+app.storage.type=local
+app.storage.local.base-dir=${java.io.tmpdir}/todo-attachments-test
+app.storage.local.base-url=http://localhost:8080
+app.storage.url-expiry-minutes=30
+app.storage.signing-secret=CHANGE_ME_TEST_STORAGE_SIGNING_SECRET_32_BYTES
