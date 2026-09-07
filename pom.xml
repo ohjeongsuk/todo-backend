@@ -32,6 +32,19 @@
 		<spotless.version>2.44.5</spotless.version>
 		<google-java-format.version>1.27.0</google-java-format.version>
 	</properties>
+	<!-- AWS SDK v2 BOM. 개별 모듈(s3 등)의 버전은 이 BOM이 관리하므로
+	     아래 dependencies 블록에서는 version을 명시하지 않는다 (PRD F-50, ROADMAP Phase 13). -->
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>software.amazon.awssdk</groupId>
+				<artifactId>bom</artifactId>
+				<version>2.54.2</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
 	<dependencies>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -121,6 +134,12 @@
 			<groupId>org.jsoup</groupId>
 			<artifactId>jsoup</artifactId>
 			<version>1.23.2</version>
+		</dependency>
+		<!-- S3 스토리지 구현 (PRD F-50, ROADMAP Phase 13). 버전은 위 BOM이 관리한다.
+		     S3Presigner는 별도 아티팩트가 아니라 s3 모듈 안에 포함돼 있다. -->
+		<dependency>
+			<groupId>software.amazon.awssdk</groupId>
+			<artifactId>s3</artifactId>
 		</dependency>
 	</dependencies>
 
