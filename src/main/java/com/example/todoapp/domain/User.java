@@ -53,6 +53,15 @@ public class User extends BaseEntity {
         return new User(email, null, nickname, AuthProvider.GOOGLE);
     }
 
+    /**
+     * 비밀번호를 교체한다 (PRD F-42). 반드시 BCrypt로 인코딩된 값을 넘긴다 (CLAUDE.md 절대 규칙 7).
+     *
+     * <p>호출한 쪽에서 이 사용자의 모든 Refresh Token을 함께 폐기해야 한다 (PRD F-44).
+     */
+    public void changePassword(String encodedPassword) {
+        this.password = encodedPassword;
+    }
+
     public Long getId() {
         return id;
     }
