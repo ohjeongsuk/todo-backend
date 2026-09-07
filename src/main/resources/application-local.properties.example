@@ -28,8 +28,22 @@ jwt.secret=CHANGE_ME_LOCAL_JWT_SECRET_AT_LEAST_32_BYTES
 # ==============================================================================
 # 첨부 스토리지 (로컬 디스크)
 #
+# type 값에 따라 LocalStorageService / S3StorageService 중 하나만 빈으로 등록된다
+# (@ConditionalOnProperty). 아래는 로컬 디스크 기준이며, S3 로 붙이려면 이 블록을
+# 다음처럼 바꾼다:
+#
+#   app.storage.type=s3
+#   app.storage.s3.bucket=<버킷명>
+#   app.storage.s3.region=ap-northeast-2
+#
+# 이때 local.base-dir / local.base-url 은 읽히지 않으므로 지워도 되고 주석으로 남겨도 된다.
+# AWS 자격증명은 이 파일에 넣지 않는다 (CLAUDE.md 절대 규칙 9). DefaultCredentialsProvider
+# 체인이 처리하므로 AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY 를 실행 환경변수로 넣는다.
+# 버킷에는 브라우저 presigned PUT 을 위한 CORS 설정이 필요하다 (PUT/GET/HEAD,
+# AllowedHeaders 에 Content-Type 필수).
+#
 # signing-secret 은 jwt.secret 과 반드시 다른 값을 쓴다 (PRD NF-32).
-# HS256 서명 키라서 32바이트(32자) 이상이어야 한다.
+# HS256 서명 키라서 32바이트(32자) 이상이어야 한다. S3 모드에서도 요구된다.
 # ==============================================================================
 app.storage.type=local
 app.storage.local.base-dir=${LOCAL_UPLOAD_DIR:../upload}
