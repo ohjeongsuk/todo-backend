@@ -56,6 +56,13 @@ public class SecurityConfig {
         // 인증이 사라진 게 아니라 AttachmentService가 StorageSignature로 직접 검증한다.
         "/api/attachments/*/upload",
         "/api/attachments/*/raw",
+        // 헬스체크 (ROADMAP 11-2). 배포 스크립트와 외부 모니터링이 토큰 없이 호출해야 하므로 연다.
+        // /actuator 전체가 아니라 health 하위만 연다는 점이 중요하다 — env·beans·configprops 등이
+        // 열리면 환경변수와 빈 구성이 그대로 노출된다. 노출 자체도 application-prod.properties의
+        // management.endpoints.web.exposure.include=health 로 이중으로 막아둔다.
+        "/actuator/health",
+        "/actuator/health/**",
+        "/api/health",
     };
 
     private final JwtTokenProvider jwtTokenProvider;
