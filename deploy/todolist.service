@@ -24,9 +24,9 @@ Group=todolist
 
 WorkingDirectory=/etc/todolist
 
-# 설정과 비밀을 한 파일에 담는다. systemd 가 root 권한으로 읽어 환경변수로 넘긴 뒤,
-# 권한을 todolist 계정으로 낮춰 프로세스를 띄운다. 그래서 파일은 600 root:root 로
-# 잠가도 되고, 서비스 계정에 읽기 권한을 줄 필요가 없다.
+# 비-비밀(conf)과 비밀(env)을 분리해 읽는다. systemd 가 root 권한으로 두 파일을 읽어
+# 병합한 뒤, 권한을 todolist 계정으로 낮춰 프로세스를 띄운다.
+EnvironmentFile=/etc/todolist/todolist.conf
 EnvironmentFile=/etc/todolist/todolist.env
 
 # $JAVA_OPTS 는 달러 하나짜리 표기여야 공백 기준으로 여러 인자로 분리된다.

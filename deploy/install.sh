@@ -14,9 +14,10 @@
 #   2) psql 로 RDS 에 DB 생성 + schema.sql 적용
 #   3) sudo systemctl start todolist
 #
-# 사전 준비: 홈 디렉터리에 아래 2개 파일이 올라와 있어야 한다 (WinSCP, 바이너리 모드)
+# 사전 준비: 홈 디렉터리에 아래 3개 파일이 올라와 있어야 한다 (WinSCP, 바이너리 모드)
 #   todo-backend-0.0.1-SNAPSHOT.jar
-#   todolist.env   <- 설정과 비밀이 모두 여기 들어 있다 (단일 파일)
+#   todolist.conf
+#   todolist.env
 # ==============================================================================
 set -euo pipefail
 
@@ -54,7 +55,7 @@ done
 [[ $EUID -eq 0 ]] || die "root 권한이 필요하다. 'sudo $0 $*' 로 실행할 것."
 
 log "업로드 파일 확인 (${UPLOAD_DIR})"
-for f in "${JAR_SRC_NAME}" "todolist.env"; do
+for f in "${JAR_SRC_NAME}" "todolist.conf" "todolist.env"; do
     [[ -f "${UPLOAD_DIR}/${f}" ]] || die "${UPLOAD_DIR}/${f} 가 없다. WinSCP 로 먼저 업로드할 것."
 done
 # jar 이 텍스트 모드로 전송돼 깨지는 사고가 잦다. 크기로 1차 확인한다.
@@ -130,13 +131,14 @@ install -d -o root -g root -m 750 "${INSTALL_DIR}/backup"
 # jar: 서비스 계정이 읽어야 하므로 그룹 읽기를 준다.
 install -o root -g "${APP_USER}" -m 640 "${UPLOAD_DIR}/${JAR_SRC_NAME}" "${JAR_DEST}"
 
-# env: systemd 가 root 로 읽어 환경변수로 넘긴다. 서비스 계정에게 읽기 권한이
-# 필요 없으므로 600 root:root 로 최대한 좁게 잠근다.
-install -o root -g root -m 600 "${UPLOAD_DIR}/todolist.env" "${INSTALL_DIR}/todolist.env"
+# conf/env: systemd 가 root 로 읽어 환경변수로 넘긴다. 서비스 계정에게 읽기 권한이
+# 필요 없으므로 비밀이 든 env 는 600 root:root 로 최대한 좁게 잠근다.
+install -o root -g "${APP_USER}" -m 640 "${UPLOAD_DIR}/todolist.conf" "${INSTALL_DIR}/todolist.conf"
+install -o root -g root          -m 600 "${UPLOAD_DIR}/todolist.env"  "${INSTALL_DIR}/todolist.env"
 
 # Windows 에서 편집한 파일이 CRLF 로 올라오면 값 끝에 \r 이 붙어
 # DB_HOST 등이 조용히 깨진다. 눈에 보이지 않는 사고라 방어적으로 제거한다.
-sed -i 's/\r$//' "${INSTALL_DIR}/todolist.env"
+sed -i 's/\r$//' "${INSTALL_DIR}/todolist.conf" "${INSTALL_DIR}/todolist.env"
 
 log "systemd 유닛 등록"
 install -o root -g root -m 644 "${SERVICE_SRC}" "${SERVICE_DEST}"
@@ -153,7 +155,7 @@ fi
 # ------------------------------------------------------------------------------
 # 5. 기동
 # ------------------------------------------------------------------------------
-SERVER_PORT="$(grep -E '^SERVER_PORT=' "${INSTALL_DIR}/todolist.env" | cut -d= -f2- | tr -d '[:space:]')"
+SERVER_PORT="$(grep -E '^SERVER_PORT=' "${INSTALL_DIR}/todolist.conf" | cut -d= -f2- | tr -d '[:space:]')"
 SERVER_PORT="${SERVER_PORT:-8080}"
 HEALTH_URL="http://127.0.0.1:${SERVER_PORT}/actuator/health"
 
@@ -164,8 +166,8 @@ if [[ ${START_SERVICE} -eq 0 ]]; then
 다음 순서로 진행할 것:
 
   1) RDS 에 데이터베이스와 스키마를 적용한다
-       export PGHOST=\$(sudo grep '^DB_HOST=' ${INSTALL_DIR}/todolist.env | cut -d= -f2-)
-       export PGUSER=\$(sudo grep '^DB_USERNAME=' ${INSTALL_DIR}/todolist.env | cut -d= -f2-)
+       export PGHOST=\$(grep '^DB_HOST=' ${INSTALL_DIR}/todolist.conf | cut -d= -f2-)
+       export PGUSER=\$(grep '^DB_USERNAME=' ${INSTALL_DIR}/todolist.env | cut -d= -f2-)
        psql -d postgres -c "CREATE DATABASE todolist_db;"
        psql -d todolist_db -f ${UPLOAD_DIR}/schema.sql
        psql -d todolist_db -c "\\dt"
