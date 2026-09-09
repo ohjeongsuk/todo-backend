@@ -57,8 +57,16 @@ openssl rand -base64 48   # STORAGE_SIGNING_SECRET (JWT_SECRET과 반드시 다�
 .\mvnw.cmd clean package
 ```
 
-`target\todo-backend-0.0.1-SNAPSHOT.jar`과 `deploy/`의 4개 파일을 **WinSCP 바이너리 모드**로
-`/home/ec2-user/`에 올린다.
+아래 **6개 파일**을 **WinSCP 바이너리 모드**로 `/home/ec2-user/`에 올린다.
+
+```
+target/todo-backend-0.0.1-SNAPSHOT.jar
+deploy/todolist.service     <- 빠뜨리기 쉽다. 없으면 install.sh가 중단된다
+deploy/todolist.conf
+deploy/todolist.env
+deploy/install.sh
+deploy/redeploy.sh
+```
 
 > ⚠️ **텍스트 모드로 올리면 jar이 깨진다.** 스크립트가 크기와 zip 무결성으로 걸러내지만,
 > 애초에 바이너리 모드인지 확인하는 편이 빠르다.
