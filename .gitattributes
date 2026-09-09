@@ -9,6 +9,13 @@ mvnw.cmd text eol=crlf
 *.bat text eol=crlf
 *.cmd text eol=crlf
 
+# 배포 자산은 반드시 LF 여야 한다 (위 * 규칙에 이미 포함되지만 중요해서 명시한다).
+# CRLF 로 리눅스에 올라가면 셸은 'bad interpreter: /usr/bin/env bash^M' 로 죽고,
+# systemd EnvironmentFile 은 값 끝에 \r 이 붙어 DB_HOST 등이 조용히 깨진다.
+deploy/*.sh text eol=lf
+deploy/*.conf text eol=lf
+deploy/*.service text eol=lf
+
 # 바이너리
 *.jar binary
 *.png binary

@@ -1,0 +1,65 @@
+# ==============================================================================
+# todolist 백엔드 systemd 유닛
+#
+# 배치 위치: /etc/systemd/system/todolist.service  (install.sh 가 복사한다)
+# 로그     : journalctl -u todolist -f
+# ==============================================================================
+
+[Unit]
+Description=Todolist Spring Boot API
+Documentation=https://github.com/ojs933327/todo-backend
+# network-online.target 은 network.target 과 다르다. network.target 은 "네트워크 스택이
+# 올라왔다"는 뜻일 뿐 IP 할당 완료를 보장하지 않아, 부팅 직후 RDS DNS 조회가 실패할 수 있다.
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+
+# 전용 시스템 계정으로 실행한다. root 로 돌리지 않는 이유는, 애플리케이션 취약점이
+# 그대로 서버 장악으로 이어지지 않게 하기 위함이다. 8080 은 1024 이상이라
+# 비특권 계정으로도 바인드할 수 있다.
+User=todolist
+Group=todolist
+
+WorkingDirectory=/etc/todolist
+
+# 비-비밀(conf)과 비밀(env)을 분리해 읽는다. systemd 가 root 권한으로 두 파일을 읽어
+# 병합한 뒤, 권한을 todolist 계정으로 낮춰 프로세스를 띄운다.
+EnvironmentFile=/etc/todolist/todolist.conf
+EnvironmentFile=/etc/todolist/todolist.env
+
+# $JAVA_OPTS 는 달러 하나짜리 표기여야 공백 기준으로 여러 인자로 분리된다.
+# ${JAVA_OPTS} 로 쓰면 전체가 인자 하나로 넘어가 자바가 인식하지 못한다.
+ExecStart=/usr/bin/java $JAVA_OPTS -jar /etc/todolist/todolist.jar
+
+# 종료: systemd 가 SIGTERM 을 보내면 Spring Boot 가 정상 종료하며 143(128+15)으로 끝난다.
+# 이를 실패로 세지 않아야 Restart=on-failure 가 오작동하지 않는다.
+SuccessExitStatus=143
+Restart=on-failure
+RestartSec=10
+TimeoutStopSec=30
+
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=todolist
+
+# ------------------------------------------------------------------------------
+# 샌드박싱
+# 운영 프로파일은 첨부를 S3 에 저장하므로 디스크에 쓸 일이 없다. 그래서 파일시스템을
+# 넓게 잠가도 동작에 지장이 없다.
+# ------------------------------------------------------------------------------
+# setuid 등으로 권한을 되찾는 경로를 차단한다
+NoNewPrivileges=true
+# /tmp 를 이 서비스 전용으로 격리한다 (자바가 임시 파일을 쓴다)
+PrivateTmp=true
+# /usr, /boot, /etc 를 읽기 전용으로 만든다. jar 과 설정이 /etc/todolist 에 있지만
+# 읽기만 하므로 문제없다. 재배포는 서비스 밖(redeploy.sh)에서 수행한다.
+ProtectSystem=full
+# /home 접근 차단. 서비스는 홈 디렉터리를 볼 이유가 없다.
+ProtectHome=true
+ProtectKernelTunables=true
+ProtectControlGroups=true
+
+[Install]
+WantedBy=multi-user.target
