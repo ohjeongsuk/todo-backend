@@ -13,7 +13,7 @@
 |---|---|---|---|
 | `todolist.service` | `/etc/systemd/system/` | 추적 | systemd 유닛 |
 | `todolist.conf` | `/etc/todolist/` | **추적** | 비-비밀 설정 (DB 호스트·CORS·JVM 옵션) |
-| `todolist.env` | `/etc/todolist/` | **제외** | 비밀 6개 |
+| `todolist.env` | `/etc/todolist/` | **제외** | 비밀 6개. 로컬 원본은 `todo-project/` 루트에 둔다 (저장소 밖) |
 | `install.sh` | — | 추적 | 최초 1회 설치 |
 | `redeploy.sh` | `/etc/todolist/` | 추적 | 재배포 (실패 시 자동 롤백) |
 | jar | `/etc/todolist/todolist.jar` | 제외 | 애플리케이션 |
@@ -60,13 +60,17 @@ openssl rand -base64 48   # STORAGE_SIGNING_SECRET (JWT_SECRET과 반드시 다�
 아래 **6개 파일**을 **WinSCP 바이너리 모드**로 `/home/ec2-user/`에 올린다.
 
 ```
-target/todo-backend-0.0.1-SNAPSHOT.jar
-deploy/todolist.service     <- 빠뜨리기 쉽다. 없으면 install.sh가 중단된다
-deploy/todolist.conf
-deploy/todolist.env
-deploy/install.sh
-deploy/redeploy.sh
+todo-backend/target/todo-backend-0.0.1-SNAPSHOT.jar
+todo-backend/deploy/todolist.service   <- 빠뜨리기 쉽다. 없으면 install.sh가 중단된다
+todo-backend/deploy/todolist.conf
+todo-backend/deploy/install.sh
+todo-backend/deploy/redeploy.sh
+todolist.env                            <- 저장소 밖. 아래 주의 참고
 ```
+
+> ⚠️ **`todolist.env`만 위치가 다르다.** 실제 비밀이 든 파일이라 `todo-project/` 루트
+> (`todo-backend/`의 상위)에 두고 두 저장소 어디에도 들어가지 않게 했다.
+> 여기 `deploy/`에는 `todolist.env.example`(값이 `CHANGE_ME`인 예시)만 있다.
 
 > ⚠️ **텍스트 모드로 올리면 jar이 깨진다.** 스크립트가 크기와 zip 무결성으로 걸러내지만,
 > 애초에 바이너리 모드인지 확인하는 편이 빠르다.
