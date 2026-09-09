@@ -12,8 +12,8 @@
 #   업로드 검증 -> 현재 jar 백업 -> 교체 -> 기동 -> 헬스체크
 #   헬스체크가 실패하면 백업 jar 로 자동 롤백하고 다시 기동한다.
 #
-# 설정만 바꾼 경우(todolist.conf / todolist.env)에는 이 스크립트가 아니라
-# 해당 파일을 갱신한 뒤 'sudo systemctl restart todolist' 만 하면 된다.
+# 설정만 바꾼 경우(todolist.env)에는 이 스크립트가 아니라 그 파일을 갱신한 뒤
+# 'sudo systemctl restart todolist' 만 하면 된다.
 # ==============================================================================
 set -euo pipefail
 
@@ -37,7 +37,7 @@ die()  { printf '\n\033[1;31m[실패]\033[0m %s\n' "$*" >&2; exit 1; }
 [[ $EUID -eq 0 ]] || die "root 권한이 필요하다. 'sudo $0' 로 실행할 것."
 [[ -f "${JAR_DEST}" ]] || die "${JAR_DEST} 가 없다. 최초 설치는 install.sh 로 할 것."
 
-SERVER_PORT="$(grep -E '^SERVER_PORT=' "${INSTALL_DIR}/todolist.conf" | cut -d= -f2- | tr -d '[:space:]')"
+SERVER_PORT="$(grep -E '^SERVER_PORT=' "${INSTALL_DIR}/todolist.env" | cut -d= -f2- | tr -d '[:space:]')"
 SERVER_PORT="${SERVER_PORT:-8080}"
 HEALTH_URL="http://127.0.0.1:${SERVER_PORT}/actuator/health"
 
@@ -130,7 +130,7 @@ else
     # 롤백해도 안 뜨면 jar 문제가 아니다 (RDS 장애, 설정 오류, 스키마 불일치 등).
     warn "롤백 후에도 기동하지 않는다. jar 이 아니라 환경 문제일 가능성이 높다:"
     warn "  - RDS 접속 가능 여부 (보안그룹·자격증명)"
-    warn "  - todolist.conf / todolist.env 값"
+    warn "  - todolist.env 값"
     warn "  - 스키마 불일치 (ddl-auto=validate)"
     journalctl -u "${APP_NAME}" -n 50 --no-pager
 fi

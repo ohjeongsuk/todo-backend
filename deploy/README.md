@@ -12,14 +12,18 @@
 | 파일 | 배치 위치 | git | 역할 |
 |---|---|---|---|
 | `todolist.service` | `/etc/systemd/system/` | 추적 | systemd 유닛 |
-| `todolist.conf` | `/etc/todolist/` | **추적** | 비-비밀 설정 (DB 호스트·CORS·JVM 옵션) |
-| `todolist.env` | `/etc/todolist/` | **제외** | 비밀 6개. 로컬 원본은 `todo-project/` 루트에 둔다 (저장소 밖) |
+| `todolist.env` | `/etc/todolist/` | **제외** | 설정+비밀 전부(20개 키). 로컬 원본은 `todo-project/` 루트 (저장소 밖) |
+| `todolist.env.example` | — | 추적 | 필요한 키 목록. 값은 `CHANGE_ME` |
 | `install.sh` | — | 추적 | 최초 1회 설치 |
 | `redeploy.sh` | `/etc/todolist/` | 추적 | 재배포 (실패 시 자동 롤백) |
 | jar | `/etc/todolist/todolist.jar` | 제외 | 애플리케이션 |
 
-**비밀과 비-비밀을 파일로 나눈 이유**: systemd는 `EnvironmentFile=`을 여러 번 선언할 수 있어
-두 파일이 런타임에 합쳐진다. 덕분에 **설정 변경 이력은 git에 남기면서 비밀은 서버에만** 둘 수 있다.
+**설정 파일은 `todolist.env` 하나다.** systemd가 root 권한으로 읽어 환경변수로 넘긴 뒤 `todolist`
+계정으로 낮춰 실행하므로, 파일을 `600 root:root`로 잠가도 서비스가 값을 받는 데 문제가 없다.
+
+> 한 파일에 몰아넣은 대가로 **설정 변경 이력이 git에 남지 않는다** (비밀을 포함해 추적 대상이 아니므로).
+> 값을 바꿀 때는 무엇을 왜 바꿨는지 `docs/ROADMAP.md`에 적어 두는 편이 좋다.
+> 어떤 키가 필요한지는 `todolist.env.example`이 저장소에서 계속 알려준다.
 
 ---
 
@@ -49,7 +53,7 @@ openssl rand -base64 48   # JWT_SECRET
 openssl rand -base64 48   # STORAGE_SIGNING_SECRET (JWT_SECRET과 반드시 다른 값)
 ```
 
-`todolist.conf`는 DB 호스트·CORS·프론트 URL이 자기 환경과 맞는지 확인한다.
+DB 호스트·CORS·프론트 URL 등 비밀이 아닌 값도 같은 파일에 들어 있다. 자기 환경과 맞는지 확인한다.
 
 ### 2-3. 빌드 및 업로드
 
@@ -57,12 +61,11 @@ openssl rand -base64 48   # STORAGE_SIGNING_SECRET (JWT_SECRET과 반드시 다�
 .\mvnw.cmd clean package
 ```
 
-아래 **6개 파일**을 **WinSCP 바이너리 모드**로 `/home/ec2-user/`에 올린다.
+아래 **5개 파일**을 **WinSCP 바이너리 모드**로 `/home/ec2-user/`에 올린다.
 
 ```
 todo-backend/target/todo-backend-0.0.1-SNAPSHOT.jar
 todo-backend/deploy/todolist.service   <- 빠뜨리기 쉽다. 없으면 install.sh가 중단된다
-todo-backend/deploy/todolist.conf
 todo-backend/deploy/install.sh
 todo-backend/deploy/redeploy.sh
 todolist.env                            <- 저장소 밖. 아래 주의 참고
@@ -128,9 +131,19 @@ sudo ~/redeploy.sh
 
 **설정만 바꿀 때는 재배포가 아니다.** 파일을 고치고 재시작만 하면 된다:
 ```bash
-sudo vi /etc/todolist/todolist.conf
+sudo vi /etc/todolist/todolist.env
 sudo systemctl restart todolist
 ```
+
+> WinSCP로 `/etc/todolist/`에 직접 쓰면 `Permission denied`가 난다. root 소유 디렉터리인데
+> WinSCP는 `ec2-user` 권한으로 쓰기 때문이다. 홈에 올린 뒤 옮기거나, 위처럼 서버에서 직접 편집한다.
+> ```bash
+> # 홈(/home/ec2-user)에 업로드한 뒤
+> sudo install -o root -g root -m 600 ~/todolist.env /etc/todolist/todolist.env
+> sudo sed -i 's/$//' /etc/todolist/todolist.env   # CRLF 방어
+> rm -f ~/todolist.env                                # 비밀 파일 잔재 정리
+> sudo systemctl restart todolist
+> ```
 
 ---
 
@@ -152,8 +165,8 @@ sudo systemctl restart todolist
 도메인을 확보한 뒤 `ROADMAP.md` 11-3을 따른다. 백엔드 쪽에서 할 일은 세 가지뿐이고
 **jar 재빌드는 필요 없다.**
 
-1. `todolist.conf`에서 `REFRESH_COOKIE_SAME_SITE`·`REFRESH_COOKIE_SECURE` **두 줄을 지운다**
-   → `application-prod.properties`의 기본값 `None`/`true`로 복귀 (cross-site 쿠키에 필수)
+1. `todolist.env`에서 `REFRESH_COOKIE_SAME_SITE`·`REFRESH_COOKIE_SECURE` **두 줄을 지운다**
+   (`todolist.env` 안에 있다) → `application-prod.properties`의 기본값 `None`/`true`로 복귀
 2. `application-prod.properties`의 `server.forward-headers-strategy=framework` 주석 해제
    → 이게 없으면 nginx 뒤에서 Spring이 모든 요청을 `http`로 인식해 구글 OAuth 콜백이 깨진다
 3. 보안그룹에서 80/443을 열고 8080을 닫는다
@@ -165,8 +178,8 @@ sudo systemctl restart todolist
 | 증상 | 확인할 것 |
 |---|---|
 | 기동 실패, 로그에 `Schema-validation` | 스키마 미적용. `db/schema.sql`을 `todolist_db`에 적용했는지 |
-| 기동 실패, `NoSuchBeanDefinitionException` | 필수 환경변수 누락. `todolist.env`의 6개가 모두 채워졌는지 |
-| 로그에 `profile is active: "local"` | `todolist.conf`의 `SPRING_PROFILES_ACTIVE=prod` 누락 |
+| 기동 실패, `NoSuchBeanDefinitionException` | 필수 환경변수 누락 또는 **키 이름 오타**. `GOOGLE_CLIENT_ID`를 `OAUTH_GOOGLE_CLIENT_ID`로 쓰면 조용히 무시되고 기동에 실패한다 |
+| 로그에 `profile is active: "local"` | `todolist.env`의 `SPRING_PROFILES_ACTIVE=prod` 누락 |
 | DB 접속 실패 | RDS 보안그룹이 EC2를 허용하는지. `DB_HOST`에 `jdbc:`나 포트가 섞이지 않았는지 |
 | 값이 이상하게 잘림 | 설정 파일이 CRLF로 올라갔을 수 있다. `install.sh`가 제거하지만 재확인 |
 | 프로세스가 조용히 사라짐 | OOM Killer 의심. `free -h`로 스왑, `dmesg | grep -i oom` 확인 |
