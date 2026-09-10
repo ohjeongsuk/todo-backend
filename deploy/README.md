@@ -30,6 +30,44 @@
 - **IAM 역할을 EC2 인스턴스에 부착** — `s3:GetObject` / `PutObject` / `DeleteObject`
   (리소스 `arn:aws:s3:::<버킷>/*`). 코드가 `DefaultCredentialsProvider`를 쓰므로 이것만 하면
   액세스 키를 서버에 두지 않아도 된다 (`CLAUDE.md` 절대 규칙 9).
+- **S3 버킷 CORS** — 본문 이미지 첨부는 브라우저가 presigned URL 로 S3 에 **직접 PUT** 한다.
+  이때 `Content-Type` 이 서명에 포함되어(`SignedHeaders=content-type;host`) 브라우저가 PUT 앞에
+  프리플라이트(OPTIONS)를 보내는데, 여기에 응답할 수 있는 것은 **버킷 자신의 CORS 설정뿐**이다.
+  백엔드의 `cors.allowed-origin` 은 `/api/**` 전용이라 아무 영향이 없다.
+  설정이 없으면 업로드가 `net::ERR_FAILED` 로 전부 실패한다.
+
+  S3 콘솔 → 버킷 → **권한** 탭 → 맨 아래 **CORS** → 편집 → 아래 JSON 붙여넣기 → 저장.
+  (새 콘솔은 JSON 만 받는다. 최상위가 `[ ... ]` 여야 한다. 반영은 수 초 내이고 재배포는 필요 없다.)
+
+  ```json
+  [
+    {
+      "AllowedOrigins": [
+        "https://main.d1prwks7k0qzzg.amplifyapp.com",
+        "http://localhost:3000"
+      ],
+      "AllowedMethods": ["PUT", "GET", "HEAD"],
+      "AllowedHeaders": ["Content-Type"],
+      "ExposeHeaders": [],
+      "MaxAgeSeconds": 3000
+    }
+  ]
+  ```
+
+  - `AllowedOrigins` 는 **문자열 정확 일치**다. 트레일링 슬래시를 붙이면 다른 origin 으로
+    취급되어 실패한다. Amplify 도메인이 바뀌면 `todolist.conf` 의 `CORS_ALLOWED_ORIGIN` 과
+    **여기를 함께** 고쳐야 한다.
+  - `http://localhost:3000` 을 빼면 안 된다. `application-local.properties` 의
+    `app.storage.type=s3` 때문에 **로컬 개발도 같은 버킷에 브라우저에서 PUT 한다.**
+    빠뜨리면 운영만 고쳐지고 로컬은 그대로 깨진다.
+  - `AllowedHeaders` 의 `Content-Type` 이 이 설정의 핵심이다. 이것만 빠져도 프리플라이트가 403 이다.
+  - `DELETE` 는 넣지 않는다. 첨부 삭제는 브라우저가 아니라 백엔드 SDK 가 수행한다.
+  - `main` 외 브랜치를 Amplify 에 배포하게 되면 브랜치마다 origin 이 새로 생긴다. 그때
+    `"https://*.d1prwks7k0qzzg.amplifyapp.com"` 한 줄로 대체한다 (origin 당 `*` 하나까지 허용).
+- **버킷 퍼블릭 차단 확인** — 배포 전 필수. 퍼블릭 액세스 차단 4개가 모두 ON 이고 버킷 정책에
+  `Principal: "*"` Statement 가 없어야 한다 (`CLAUDE.md` 2장: 버킷은 퍼블릭으로 열지 않는다).
+  조회는 presigned GET 으로 충분하므로 퍼블릭 읽기는 필요 없다.
+  현재 미충족 상태이며 경위는 `docs/CHECKLIST.md` 16-1.6 에 기록돼 있다.
 - **EC2 보안그룹** — 22는 본인 IP. 1단계에서는 8080도 본인 IP로만. (2단계에서 80/443 공개, 8080 폐쇄)
 - **RDS 보안그룹** — 5432 인바운드를 EC2 보안그룹에서만 허용.
 - **DB 스키마** — `todolist_db` 생성 후 `db/schema.sql` 적용.
