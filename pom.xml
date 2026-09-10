@@ -276,6 +276,20 @@
 					</execution>
 				</executions>
 			</plugin>
+			<!--
+				테스트는 항상 test 프로파일로 실행한다.
+				기본값(local)으로 뜨면 개발자 개인 설정인 application-local.properties 의
+				DB에 테스트가 붙는다. @ActiveProfiles 를 빠뜨린 테스트가 생겨도 여기서 막힌다.
+			-->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<configuration>
+					<systemPropertyVariables>
+						<spring.profiles.active>test</spring.profiles.active>
+					</systemPropertyVariables>
+				</configuration>
+			</plugin>
 		</plugins>
 	</build>
 
