@@ -46,6 +46,15 @@
 		</dependencies>
 	</dependencyManagement>
 	<dependencies>
+		<!--
+			헬스체크 엔드포인트(/actuator/health)용. EC2 systemd 배포 스크립트가 기동 성공 여부를
+			판정하는 근거이며, DataSource 상태까지 함께 확인한다 (ROADMAP 11-2).
+			노출 범위는 application-prod.properties 에서 health 하나로 제한한다.
+		-->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-actuator</artifactId>
+		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-data-jpa</artifactId>

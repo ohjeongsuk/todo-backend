@@ -41,6 +41,10 @@ build/
 .env
 .env.*
 !.env.example
+# 운영 서버 비밀 값 (systemd EnvironmentFile). 예시(.example)만 추적한다.
+# deploy/todolist.conf 는 비밀이 없으므로 의도적으로 추적 대상이다.
+deploy/todolist.env
+!deploy/todolist.env.example
 application-local.properties
 application-secret.properties
 application-test.properties
